@@ -113,7 +113,10 @@ namespace the_sun.Champions
 
                     if ((target.HealthPercent <= 60 && target.HealthPercent >= 20) || target == TargetSelector.SelectedTarget || output.AoeTargetsHitCount >= RMenu["Raoe"].GetValue<MenuSlider>().Value)
                     {
-                        R.Cast(output.CastPosition);
+                        if(output.Hitchance >= HitChance.Low)
+                        {
+                            R.Cast(output.CastPosition);
+                        }
                     }
                 }
             }
@@ -179,7 +182,7 @@ namespace the_sun.Champions
                     target = TargetSelector.SelectedTarget;
                 }
 
-                if (target != null && !target.IsDead)
+                if (target != null && !target.IsDead && target.InRange(Q.Range))
                 {
                     Q.Cast(target);
                 }
@@ -255,6 +258,9 @@ namespace the_sun.Champions
             if(sender.IsEnemy && W.IsReady())
             {
                 if(sender.Spellbook.IsAutoAttack && args.Target.IsMe && Player.HealthPercent <= 30)
+                {
+                    W.Cast();
+                } else if(args.Target.IsMe && !(sender is AIMinionClient))
                 {
                     W.Cast();
                 }
