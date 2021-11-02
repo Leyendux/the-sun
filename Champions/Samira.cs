@@ -4,7 +4,6 @@ using the_sun.Core;
 using EnsoulSharp;
 using EnsoulSharp.SDK;
 using EnsoulSharp.SDK.MenuUI;
-using EnsoulSharp.SDK.Rendering;
 using System.Drawing;
 
 namespace the_sun.Champions
@@ -25,7 +24,6 @@ namespace the_sun.Champions
             Orbwalker.OnAfterAttack += OnAfterAttack;
             Drawing.OnDraw += OnDraw;
         }
-
         protected override void SetupMenus()
         {
             MainMenu = new Menu(Player.CharacterName, "[the_sun] " + Player.CharacterName, true).Attach();
@@ -86,7 +84,6 @@ namespace the_sun.Champions
                     break;
             }
         }
-
         private void OnLastHit()
         {
             if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
@@ -103,7 +100,6 @@ namespace the_sun.Champions
                 }
             }
         }
-
         private void OnLaneClear()
         {
             if(Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
@@ -134,7 +130,6 @@ namespace the_sun.Champions
                 }
             }
         }
-
         private void OnHarassUpdate()
         {
             AIHeroClient target;
@@ -167,7 +162,17 @@ namespace the_sun.Champions
                 }
             }
         }
+        private void OnComboUpdate()
+        {
+            if (R.IsReady())
+            {
+                if (Player.CountEnemyHeroesInRange(R.Range) > 0)
+                {
+                    R.Cast();
+                }
+            }
 
+        }
         private void OnAfterAttack(object sender, AfterAttackEventArgs e)
         {
             if(Orbwalker.ActiveMode == OrbwalkerMode.Combo)
@@ -240,19 +245,6 @@ namespace the_sun.Champions
                 }
             }
         }
-
-        private void OnComboUpdate()
-        {
-            if(R.IsReady())
-            {
-                if (Player.CountEnemyHeroesInRange(R.Range) > 0)
-                {
-                    R.Cast();
-                }
-            }
-            
-        }
-
         private void OnDoCast(AIBaseClient sender, AIBaseClientProcessSpellCastEventArgs args)
         {
             if (sender == null || !sender.IsValid)
@@ -282,7 +274,6 @@ namespace the_sun.Champions
                 }
             }
         }
-
         private void OnDraw(EventArgs args)
         {
             if (Player == null || Player.IsDead || Player.IsRecalling())
