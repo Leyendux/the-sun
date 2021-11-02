@@ -8,7 +8,7 @@ namespace the_sun
 {
     internal class Program
     {
-        private static readonly string[] Champions = new[] { "Samira", "Vladimir" };
+        private static readonly string[] Champions = new[] { "Samira", "Vladimir", "Orianna" };
 
         private static void Main(string[] args)
         {
@@ -40,6 +40,9 @@ namespace the_sun
                     break;
                 case "Vladimir":
                     new Vladimir();
+                    break;
+                case "Orianna":
+                    new Orianna();
                     break;
                 default:
                     break;
