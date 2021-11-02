@@ -118,7 +118,7 @@ namespace the_sun.Champions
                         if (ally.InRange(E.Range) && ally.CountEnemyHeroesInRange(R.Range) >= RMenu["Raoe"].GetValue<MenuSlider>().Value)
                         {
                             E.Cast(ally);
-                        } else if((target != null && !target.IsDead) && target.HealthPercent <= 60)
+                        } else if((target != null && !target.IsDead) && target.HealthPercent <= 60 && ally.InRange(E.Range))
                         {
                             E.Cast(ally);
                         }
@@ -192,7 +192,7 @@ namespace the_sun.Champions
                 {
                     PredictionOutput output = Q.GetPrediction(target);
 
-                    if (output.Hitchance >= HitChance.Medium)
+                    if (output.Hitchance >= HitChance.High)
                     {
                         Q.Cast(output.CastPosition);
                     }
@@ -245,7 +245,7 @@ namespace the_sun.Champions
                 {
                     PredictionOutput output = Q.GetPrediction(target);
 
-                    if (output.Hitchance >= HitChance.Medium)
+                    if (output.Hitchance >= HitChance.High)
                     {
                         Q.Cast(output.CastPosition);
                     }
@@ -433,7 +433,7 @@ namespace the_sun.Champions
                 {
                     E.Cast(target);
                 }
-                else if ((args.Target.IsAlly || args.To.Distance(target.Position) <= E.Range) && !(sender is AIMinionClient))
+                else if ((args.Target.IsAlly || args.To.Distance(target.Position) <= E.Range) && !(sender is AIMinionClient) && args.Target.InRange(E.Range))
                 {
                     E.Cast(target);
                 }
