@@ -23,7 +23,6 @@ namespace the_sun.Champions
             AIBaseClient.OnDoCast += OnDoCast;
             Drawing.OnDraw += OnDraw;
         }
-
         protected override void SetupMenus()
         {
             MainMenu = new Menu(Player.CharacterName, "[the_sun] " + Player.CharacterName, true).Attach();
@@ -35,7 +34,7 @@ namespace the_sun.Champions
                 QMenu.Add(new MenuSlider("QMana", "Q Mana Farm & Harass", 30, 0, 100));
             }
 
-            WMenu = MainMenu.Add(new Menu("W", "[W] Command: Attack"));
+            WMenu = MainMenu.Add(new Menu("W", "[W] Command: Dissonance"));
             {
                 WMenu.Add(new MenuBool("AutoW", "Auto W Harass", true));
                 WMenu.Add(new MenuBool("WFarm", "Use W Farm", true));
