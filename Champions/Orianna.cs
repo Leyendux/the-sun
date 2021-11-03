@@ -94,9 +94,12 @@ namespace the_sun.Champions
                     break;
             }
         }
-
         private void OnComboUpdate()
         {
+            if(Player.IsDodgingMissiles)
+            {
+                return;
+            }
             AIHeroClient target;
             if(R.IsReady())
             {
@@ -123,7 +126,7 @@ namespace the_sun.Champions
                         }
                     }
                 }
-                if(ball != null && ball.IsValid)
+                if(ball != null && !ball.IsDead)
                 {
                     if (TargetSelector.SelectedTarget == null)
                     {
@@ -176,6 +179,26 @@ namespace the_sun.Champions
             }
             if(Q.IsReady())
             {
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes)
+                    {
+                        if (TargetSelector.SelectedTarget == null)
+                        {
+                            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                            && i.Distance(ally.Position) <= Q.Range && !i.IsDead)
+                            .OrderBy(i => i.Health).FirstOrDefault();
+                        }
+                        else
+                        {
+                            target = TargetSelector.SelectedTarget;
+                        }
+                        if (ally.InRange(E.Range) && ally.CountEnemyHeroesInRange(Q.Range) > 0)
+                        {
+                            E.Cast(ally);
+                        }
+                    }
+                }
                 if (TargetSelector.SelectedTarget == null)
                 {
                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
@@ -199,7 +222,27 @@ namespace the_sun.Champions
             }
             if(W.IsReady())
             {
-                if (ball != null && ball.IsValid)
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes)
+                    {
+                        if (TargetSelector.SelectedTarget == null)
+                        {
+                            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                            && i.Distance(ally.Position) <= W.Range && !i.IsDead)
+                            .OrderBy(i => i.Health).FirstOrDefault();
+                        }
+                        else
+                        {
+                            target = TargetSelector.SelectedTarget;
+                        }
+                        if (ally.InRange(E.Range) && ally.CountEnemyHeroesInRange(W.Range) > 0)
+                        {
+                            E.Cast(ally);
+                        }
+                    }
+                }
+                if (ball != null && !ball.IsDead)
                 {
                     if (ball.CountEnemyHeroesInRange(W.Range) > 0)
                     {
@@ -226,9 +269,33 @@ namespace the_sun.Champions
         }
         private void OnHarassUpdate()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             AIHeroClient target;
             if (Q.IsReady() && QMenu["AutoQ"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
             {
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes)
+                    {
+                        if (TargetSelector.SelectedTarget == null)
+                        {
+                            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                            && i.Distance(ally.Position) <= Q.Range && !i.IsDead)
+                            .OrderBy(i => i.Health).FirstOrDefault();
+                        }
+                        else
+                        {
+                            target = TargetSelector.SelectedTarget;
+                        }
+                        if (ally.InRange(E.Range) && ally.CountEnemyHeroesInRange(Q.Range) > 0)
+                        {
+                            E.Cast(ally);
+                        }
+                    }
+                }
                 if (TargetSelector.SelectedTarget == null)
                 {
                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
@@ -252,7 +319,27 @@ namespace the_sun.Champions
             }
             if (W.IsReady() && WMenu["AutoW"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= WMenu["WMana"].GetValue<MenuSlider>().Value)
             {
-                if(ball != null && ball.IsValid)
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes)
+                    {
+                        if (TargetSelector.SelectedTarget == null)
+                        {
+                            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                            && i.Distance(ally.Position) <= W.Range && !i.IsDead)
+                            .OrderBy(i => i.Health).FirstOrDefault();
+                        }
+                        else
+                        {
+                            target = TargetSelector.SelectedTarget;
+                        }
+                        if (ally.InRange(E.Range) && ally.CountEnemyHeroesInRange(W.Range) > 0)
+                        {
+                            E.Cast(ally);
+                        }
+                    }
+                }
+                if (ball != null && !ball.IsDead)
                 {
                     if(ball.CountEnemyHeroesInRange(W.Range) > 0)
                     {
@@ -278,9 +365,38 @@ namespace the_sun.Champions
         }
         private void OnLaneClear()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
             {
-                AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                AIMinionClient[] minions;
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes.Where(i => i.InRange(E.Range) && !i.IsDead))
+                    {
+                       minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                       && i.Distance(ally) <= Q.Range && !i.IsDead).ToArray();
+
+                        if (minions.Length >= 3)
+                        {
+                            if (minions.FirstOrDefault() != null || !minions.FirstOrDefault().IsDead)
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+
+                        foreach (AIMinionClient m in minions)
+                        {
+                            if (m.Health < Q.GetDamage(m))
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+                    }
+                }
+                minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                        && i.DistanceToPlayer() <= Q.Range && !i.IsDead).ToArray();
 
                 if (minions.Length >= 3)
@@ -305,9 +421,34 @@ namespace the_sun.Champions
 
             if (W.IsReady() && WMenu["WFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= WMenu["WMana"].GetValue<MenuSlider>().Value)
             {
-                if(ball != null && ball.IsValid)
+                AIMinionClient[] minions;
+                if (E.IsReady())
                 {
-                    AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes.Where(i => i.InRange(E.Range) && !i.IsDead))
+                    {
+                        minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                       && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
+
+                        if (minions.Length >= 3)
+                        {
+                            if (minions.FirstOrDefault() != null || !minions.FirstOrDefault().IsDead)
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+
+                        foreach (AIMinionClient m in minions)
+                        {
+                            if (m.Health < W.GetDamage(m))
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+                    }
+                }
+                if (ball != null && !ball.IsDead)
+                {
+                    minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                        && i.Distance(ball.Position) <= W.Range && !i.IsDead).ToArray();
 
                     if (minions.Length >= 3)
@@ -336,7 +477,7 @@ namespace the_sun.Champions
                         {
                             if (buffAlly.Name.Contains("orianaghost"))
                             {
-                                AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                                minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                                    && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
 
                                 if (minions.Length >= 3)
@@ -365,9 +506,30 @@ namespace the_sun.Champions
         }
         private void OnLastHit()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
             {
-                AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                AIMinionClient[] minions;
+                if (E.IsReady())
+                {
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes.Where(i => i.InRange(E.Range) && !i.IsDead))
+                    {
+                        minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                        && i.Distance(ally) <= Q.Range && !i.IsDead).ToArray();
+
+                        foreach (AIMinionClient m in minions)
+                        {
+                            if (m.Health < Q.GetDamage(m))
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+                    }
+                }
+                minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                         && i.DistanceToPlayer() <= Q.Range && !i.IsDead).ToArray();
 
                 foreach (AIMinionClient m in minions)
@@ -381,9 +543,26 @@ namespace the_sun.Champions
 
             if (W.IsReady() && WMenu["WFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= WMenu["WMana"].GetValue<MenuSlider>().Value)
             {
-                if (ball != null && ball.IsValid)
+                AIMinionClient[] minions;
+                if (E.IsReady())
                 {
-                    AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                    foreach (AIBaseClient ally in GameObjects.AllyHeroes.Where(i => i.InRange(E.Range) && !i.IsDead))
+                    {
+                        minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                        && i.Distance(ally) <= W.Range && !i.IsDead).ToArray();
+
+                        foreach (AIMinionClient m in minions)
+                        {
+                            if (m.Health < W.GetDamage(m))
+                            {
+                                E.Cast(ally);
+                            }
+                        }
+                    }
+                }
+                if (ball != null && !ball.IsDead)
+                {
+                    minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                             && i.Distance(ball.Position) <= W.Range && !i.IsDead).ToArray();
 
                     foreach (AIMinionClient m in minions)
@@ -402,7 +581,7 @@ namespace the_sun.Champions
                         {
                             if (buffAlly.Name.Contains("orianaghost"))
                             {
-                                AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                                minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
                                         && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
 
                                 foreach (AIMinionClient m in minions)
@@ -459,16 +638,17 @@ namespace the_sun.Champions
 
                 if (DrawMenu["W"].GetValue<MenuBool>().Enabled && W.IsReady())
                 {
-                    if(ball != null && ball.IsValid)
+                    if (ball != null && !ball.IsDead)
                     {
                         Render.Circle.DrawCircle(ball.Position, W.Range, Color.Gold);
-                    } else
+                    }
+                    else
                     {
-                        foreach(AIBaseClient ally in GameObjects.AllyHeroes)
+                        foreach (AIBaseClient ally in GameObjects.AllyHeroes)
                         {
-                            foreach(BuffInstance buffAlly in ally.Buffs)
+                            foreach (BuffInstance buffAlly in ally.Buffs)
                             {
-                                if(buffAlly.Name.Contains("orianaghost"))
+                                if (buffAlly.Name.Contains("orianaghost"))
                                 {
                                     Render.Circle.DrawCircle(ally.Position, W.Range, Color.Gold);
                                 }
@@ -484,10 +664,11 @@ namespace the_sun.Champions
 
                 if (DrawMenu["R"].GetValue<MenuBool>().Enabled && R.IsReady())
                 {
-                    if (ball != null && ball.IsValid)
+                    if (ball != null && !ball.IsDead)
                     {
                         Render.Circle.DrawCircle(ball.Position, R.Range, Color.Red);
-                    } else
+                    }
+                    else
                     {
                         foreach (AIBaseClient ally in GameObjects.AllyHeroes)
                         {

@@ -89,6 +89,10 @@ namespace the_sun.Champions
         }
         private void OnComboUpdate()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             AIHeroClient target;
             if (R.IsReady())
             {
@@ -164,6 +168,10 @@ namespace the_sun.Champions
         }
         private void OnHarassUpdate()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             AIHeroClient target;
             if (Q.IsReady())
             {
@@ -186,6 +194,10 @@ namespace the_sun.Champions
         }
         private void OnLaneClear()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             if (E.IsReady() && EMenu["EFarm"].GetValue<MenuBool>().Enabled)
             {
                 AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
@@ -216,6 +228,10 @@ namespace the_sun.Champions
         }
         private void OnLastHit()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled)
             {
                 AIMinionClient minion = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()

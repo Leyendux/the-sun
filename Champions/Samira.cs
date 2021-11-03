@@ -86,6 +86,10 @@ namespace the_sun.Champions
         }
         private void OnLastHit()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
             {
                 AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
@@ -102,7 +106,11 @@ namespace the_sun.Champions
         }
         private void OnLaneClear()
         {
-            if(Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
+            if (Q.IsReady() && QMenu["QFarm"].GetValue<MenuBool>().Enabled && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
             {
                 Q.Collision = true;
                 AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
@@ -132,6 +140,10 @@ namespace the_sun.Champions
         }
         private void OnHarassUpdate()
         {
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
             AIHeroClient target;
             Q.Collision = true;
             if (Q.IsReady() && Player.ManaPercent >= QMenu["QMana"].GetValue<MenuSlider>().Value)
@@ -164,6 +176,10 @@ namespace the_sun.Champions
         }
         private void OnComboUpdate()
         {
+            if (Player.IsDodgingMissiles || Player.Spellbook.IsAutoAttack)
+            {
+                return;
+            }
             if (R.IsReady())
             {
                 if (Player.CountEnemyHeroesInRange(R.Range) > 0)
@@ -175,7 +191,11 @@ namespace the_sun.Champions
         }
         private void OnAfterAttack(object sender, AfterAttackEventArgs e)
         {
-            if(Orbwalker.ActiveMode == OrbwalkerMode.Combo)
+            if (Player.IsDodgingMissiles)
+            {
+                return;
+            }
+            if (Orbwalker.ActiveMode == OrbwalkerMode.Combo)
             {
                 AIHeroClient target;
                 Q.Collision = true;
