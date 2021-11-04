@@ -131,7 +131,7 @@ namespace the_sun.Champions
                     if (TargetSelector.SelectedTarget == null)
                     {
                         target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                        && i.Distance(ball.Position) <= R.Range && !i.IsDead)
+                        && i.Distance(ball) <= R.Range && !i.IsDead)
                         .OrderBy(i => i.Health).FirstOrDefault();
                     }
                     else
@@ -157,7 +157,7 @@ namespace the_sun.Champions
                                 if (TargetSelector.SelectedTarget == null)
                                 {
                                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                                    && i.Distance(ally.Position) <= R.Range && !i.IsDead)
+                                    && i.Distance(ally) <= R.Range && !i.IsDead)
                                     .OrderBy(i => i.Health).FirstOrDefault();
                                 }
                                 else
@@ -186,7 +186,7 @@ namespace the_sun.Champions
                         if (TargetSelector.SelectedTarget == null)
                         {
                             target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                            && i.Distance(ally.Position) <= Q.Range && !i.IsDead)
+                            && i.Distance(ally) <= Q.Range && !i.IsDead)
                             .OrderBy(i => i.Health).FirstOrDefault();
                         }
                         else
@@ -229,7 +229,7 @@ namespace the_sun.Champions
                         if (TargetSelector.SelectedTarget == null)
                         {
                             target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                            && i.Distance(ally.Position) <= W.Range && !i.IsDead)
+                            && i.Distance(ally) <= W.Range && !i.IsDead)
                             .OrderBy(i => i.Health).FirstOrDefault();
                         }
                         else
@@ -283,7 +283,7 @@ namespace the_sun.Champions
                         if (TargetSelector.SelectedTarget == null)
                         {
                             target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                            && i.Distance(ally.Position) <= Q.Range && !i.IsDead)
+                            && i.Distance(ally) <= Q.Range && !i.IsDead)
                             .OrderBy(i => i.Health).FirstOrDefault();
                         }
                         else
@@ -326,7 +326,7 @@ namespace the_sun.Champions
                         if (TargetSelector.SelectedTarget == null)
                         {
                             target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                            && i.Distance(ally.Position) <= W.Range && !i.IsDead)
+                            && i.Distance(ally) <= W.Range && !i.IsDead)
                             .OrderBy(i => i.Health).FirstOrDefault();
                         }
                         else
@@ -427,7 +427,7 @@ namespace the_sun.Champions
                     foreach (AIBaseClient ally in GameObjects.AllyHeroes.Where(i => i.InRange(E.Range) && !i.IsDead))
                     {
                         minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                       && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
+                       && i.Distance(ally) <= W.Range && !i.IsDead).ToArray();
 
                         if (minions.Length >= 3)
                         {
@@ -449,7 +449,7 @@ namespace the_sun.Champions
                 if (ball != null && !ball.IsDead)
                 {
                     minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                       && i.Distance(ball.Position) <= W.Range && !i.IsDead).ToArray();
+                       && i.Distance(ball) <= W.Range && !i.IsDead).ToArray();
 
                     if (minions.Length >= 3)
                     {
@@ -460,7 +460,7 @@ namespace the_sun.Champions
                     }
 
                     minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                            && i.Distance(ball.Position) <= W.Range && !i.IsDead).ToArray();
+                            && i.Distance(ball) <= W.Range && !i.IsDead).ToArray();
 
                     foreach (AIMinionClient m in minions)
                     {
@@ -478,7 +478,7 @@ namespace the_sun.Champions
                             if (buffAlly.Name.Contains("orianaghost"))
                             {
                                 minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                                   && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
+                                   && i.Distance(ally) <= W.Range && !i.IsDead).ToArray();
 
                                 if (minions.Length >= 3)
                                 {
@@ -489,7 +489,7 @@ namespace the_sun.Champions
                                 }
 
                                 minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                                        && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
+                                        && i.Distance(ally) <= W.Range && !i.IsDead).ToArray();
 
                                 foreach (AIMinionClient m in minions)
                                 {
@@ -563,7 +563,7 @@ namespace the_sun.Champions
                 if (ball != null && !ball.IsDead)
                 {
                     minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                            && i.Distance(ball.Position) <= W.Range && !i.IsDead).ToArray();
+                            && i.Distance(ball) <= W.Range && !i.IsDead).ToArray();
 
                     foreach (AIMinionClient m in minions)
                     {
@@ -582,7 +582,7 @@ namespace the_sun.Champions
                             if (buffAlly.Name.Contains("orianaghost"))
                             {
                                 minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                                        && i.Distance(ally.Position) <= W.Range && !i.IsDead).ToArray();
+                                        && i.Distance(ally) <= W.Range && !i.IsDead).ToArray();
 
                                 foreach (AIMinionClient m in minions)
                                 {
@@ -611,7 +611,7 @@ namespace the_sun.Champions
                 {
                     E.Cast(target);
                 }
-                else if ((args.Target.IsAlly || args.To.Distance(target.Position) <= E.Range) && !(sender is AIMinionClient) && args.Target.InRange(E.Range))
+                else if ((args.Target.IsAlly || args.To.Distance(target) <= E.Range) && !(sender is AIMinionClient) && args.Target.InRange(E.Range))
                 {
                     E.Cast(target);
                 }

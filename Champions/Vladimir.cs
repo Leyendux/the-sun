@@ -66,6 +66,16 @@ namespace the_sun.Champions
                 return;
             }
 
+            if(Player.HasBuff("VladimirW"))
+            {
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+            }
+
+            if(Player.HasBuff("VladimirE"))
+            {
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+            }
+
             if (QMenu["AutoQ"].GetValue<MenuBool>().Enabled && (Orbwalker.ActiveMode != OrbwalkerMode.Combo || Orbwalker.ActiveMode != OrbwalkerMode.Harass) && !Player.IsUnderEnemyTurret())
             {
                 OnHarassUpdate();
@@ -113,7 +123,7 @@ namespace the_sun.Champions
 
                     if ((target.HealthPercent <= 60 && target.HealthPercent >= 20) || target == TargetSelector.SelectedTarget || output.AoeTargetsHitCount >= RMenu["Raoe"].GetValue<MenuSlider>().Value)
                     {
-                        if(output.Hitchance >= HitChance.Low)
+                        if(output.Hitchance >= HitChance.Medium)
                         {
                             R.Cast(output.CastPosition);
                         }
@@ -252,19 +262,6 @@ namespace the_sun.Champions
             if (sender == null || !sender.IsValid)
             {
                 return;
-            }
-
-            if (sender.IsMe)
-            {
-                if (args.Slot == SpellSlot.W)
-                {
-                    Orbwalker.SetAttackPauseTime(2000);
-                }
-
-                if (args.Slot == SpellSlot.E)
-                {
-                    Orbwalker.SetAttackPauseTime(1500);
-                }
             }
             
             if(sender.IsEnemy && W.IsReady())

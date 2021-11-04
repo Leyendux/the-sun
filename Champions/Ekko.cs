@@ -8,20 +8,19 @@ using the_sun.Core;
 
 namespace the_sun.Champions
 {
-    public class Garen : Champion
+    public class Ekko : Champion
     {
         protected override void SetupSpells()
         {
-            Q = new Spell(SpellSlot.Q, 650f) { Delay = 0f };
-            W = new Spell(SpellSlot.W, 0f) { Delay = 0f };
-            E = new Spell(SpellSlot.E, 325f) { Delay = 0f };
-            R = new Spell(SpellSlot.R, 400f) { Delay = 0.435f };
+            Q = new Spell(SpellSlot.Q, 1100f) { Delay = 0.25f, Speed = 2300, Width = 200, IsSkillShot = true, Collision = false, Type = SpellType.Line };
+            W = new Spell(SpellSlot.W, 1600f) { Delay = 0.25f, Width = 375, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
+            E = new Spell(SpellSlot.E, 550f) { Delay = 0f };
+            R = new Spell(SpellSlot.R, 375f) { Delay = 0.5f };
         }
         protected override void SetupEvents()
         {
             GameEvent.OnGameTick += OnTick;
             AIBaseClient.OnDoCast += OnDoCast;
-            Orbwalker.OnAfterAttack += OnAfterAttack;
             Drawing.OnDraw += OnDraw;
         }
         protected override void SetupMenus()
@@ -39,6 +38,7 @@ namespace the_sun.Champions
             }
         }
 
+        AIMinionClient ekkoShadow;
         private void OnTick(EventArgs args)
         {
             if (Player == null || Player.IsDead || Player.IsRecalling())
@@ -51,9 +51,9 @@ namespace the_sun.Champions
                 return;
             }
 
-            if (Player.HasBuff("GarenE"))
+            if(R.IsReady())
             {
-                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                ekkoShadow = GameObjects.AllyMinions.Where(i => i.Name == "Ekko").FirstOrDefault();
             }
 
             switch (Orbwalker.ActiveMode)
@@ -63,10 +63,9 @@ namespace the_sun.Champions
                     break;
             }
         }
-
         private void OnComboUpdate()
         {
-            if (Player.IsDodgingMissiles)
+            if(Player.IsDodgingMissiles)
             {
                 return;
             }
@@ -76,7 +75,28 @@ namespace the_sun.Champions
                 if (TargetSelector.SelectedTarget == null)
                 {
                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= R.Range && !i.IsDead)
+                    && i.Distance(ekkoShadow) <= R.Range && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if(target != null && !target.IsDead)
+                {
+                    if(target.Health <= (Player.GetAutoAttackDamage(target, true) + R.GetDamage(target)) || ekkoShadow.CountEnemyHeroesInRange(R.Range) >= 2)
+                    {
+                        R.Cast();
+                    }
+                }
+            }
+            if (Q.IsReady())
+            {
+                if (TargetSelector.SelectedTarget == null)
+                {
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= Q.Range && !i.IsDead)
                     .OrderBy(i => i.Health).FirstOrDefault();
                 }
                 else
@@ -86,31 +106,55 @@ namespace the_sun.Champions
 
                 if (target != null && !target.IsDead)
                 {
-                    if(target.Health < (Q.GetDamage(target) + E.GetDamage(target) + R.GetDamage(target) + Player.GetAutoAttackDamage(target)))
+                    PredictionOutput output = Q.GetPrediction(target);
+
+                    if (output.Hitchance >= HitChance.High)
                     {
-                        R.Cast(target);
+                        Q.Cast(output.CastPosition);
+                        return;
                     }
                 }
             }
-            if(Q.IsReady())
+            if (E.IsReady())
             {
-                if(Player.CountEnemyHeroesInRange(Q.Range) > 0)
+                if (TargetSelector.SelectedTarget == null)
                 {
-                    Q.Cast();
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= E.Range && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if (target != null && !target.IsDead)
+                {
+                    E.Cast(target.Position);
                 }
             }
-        }
-        private void OnAfterAttack(Object sender, AfterAttackEventArgs args)
-        {
-            if (Player.IsDodgingMissiles)
+            if (W.IsReady())
             {
-                return;
-            }
-            if(E.IsReady() && !Q.IsReady())
-            {
-                if(Player.CountEnemyHeroesInRange(E.Range) > 0)
+                if (TargetSelector.SelectedTarget == null)
                 {
-                    E.Cast();
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= W.Range && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if (target != null && !target.IsDead)
+                {
+                    PredictionOutput output = W.GetPrediction(target);
+
+                    if (output.Hitchance >= HitChance.VeryHigh)
+                    {
+                        W.Cast(output.CastPosition);
+                        return;
+                    }
                 }
             }
         }
@@ -121,15 +165,11 @@ namespace the_sun.Champions
                 return;
             }
 
-            if (sender.IsEnemy && W.IsReady())
+            if (sender.IsEnemy && R.IsReady())
             {
-                if (sender.Spellbook.IsAutoAttack && args.Target.IsMe && Player.HealthPercent <= 30 && !(sender is AIMinionClient))
+                if ((args.Target.IsMe || args.To.DistanceToPlayer() <= R.Range) && Player.HealthPercent <= 30 && !(sender is AIMinionClient))
                 {
-                    W.Cast();
-                }
-                else if ((args.Target.IsMe || args.To.DistanceToPlayer() <= E.Range) && !(sender is AIMinionClient))
-                {
-                    W.Cast();
+                    R.Cast();
                 }
             }
         }
@@ -165,7 +205,7 @@ namespace the_sun.Champions
 
                 if (DrawMenu["R"].GetValue<MenuBool>().Enabled && R.IsReady())
                 {
-                    Render.Circle.DrawCircle(GameObjects.Player.Position, R.Range, Color.Red);
+                    Render.Circle.DrawCircle(ekkoShadow.Position, R.Range, Color.Red);
                 }
             }
             else

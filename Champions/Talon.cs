@@ -118,7 +118,7 @@ namespace the_sun.Champions
                 {
                     PredictionOutput output = W.GetPrediction(target);
 
-                    if(output.Hitchance >= HitChance.Low)
+                    if(output.Hitchance >= HitChance.High)
                     {
                         W.Cast(output.CastPosition);
                     }
