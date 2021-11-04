@@ -4,6 +4,7 @@ using System.Drawing;
 using EnsoulSharp;
 using EnsoulSharp.SDK;
 using EnsoulSharp.SDK.MenuUI;
+using EnsoulSharp.SDK.Rendering;
 using the_sun.Core;
 
 namespace the_sun.Champions
@@ -54,9 +55,11 @@ namespace the_sun.Champions
                 case OrbwalkerMode.Combo:
                     OnComboUpdate();
                     break;
+                case OrbwalkerMode.LaneClear:
+                    OnLaneClear();
+                    break;
             }
         }
-
         private void OnComboUpdate()
         {
             if (Player.IsDodgingMissiles)
@@ -79,7 +82,7 @@ namespace the_sun.Champions
 
                 if (target != null && !target.IsDead)
                 {
-                    if (target.Health <= (Q.GetDamage(target) + W.GetDamage(target) + R.GetDamage(target) + Player.GetAutoAttackDamage(target)) || target == TargetSelector.SelectedTarget)
+                    if (target.Health <= (Q.GetDamage(target) + W.GetDamage(target) + R.GetDamage(target) + Player.GetAutoAttackDamage(target, true)) || target == TargetSelector.SelectedTarget)
                     {
                         R.Cast();
                     }
@@ -125,7 +128,50 @@ namespace the_sun.Champions
                 }
             }
         }
+        private void OnLaneClear()
+        {
+            if(Player.IsDodgingMissiles)
+            {
+                return;
+            }
+            AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                       && i.DistanceToPlayer() <= W.Range && !i.IsDead).ToArray();
 
+            if (minions.Length >= 3)
+            {
+                if (minions.FirstOrDefault() != null || !minions.FirstOrDefault().IsDead)
+                {
+                    W.Cast(minions.FirstOrDefault().Position);
+                }
+            }
+
+            minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= W.Range && !i.IsDead).ToArray();
+
+            foreach (AIMinionClient m in minions)
+            {
+                if (m.Health <= W.GetDamage(m))
+                {
+                    W.Cast(m.Position);
+                }
+            }
+
+            AIMinionClient minion = GameObjects.Jungle.Where(i => i.IsValidTarget()
+                       && i.DistanceToPlayer() <= Q.Range && !i.IsDead).OrderBy(i => i.Health).FirstOrDefault();
+
+            if (minion != null && !minion.IsDead)
+            {
+                Q.Cast(minion);
+            }
+
+            minion = GameObjects.Jungle.Where(i => i.IsValidTarget()
+                       && i.DistanceToPlayer() <= W.Range && !i.IsDead).OrderBy(i => i.Health).FirstOrDefault();
+
+            if(minion != null && !minion.IsDead)
+            {
+                W.Cast(minion.Position);
+            }
+        }
         private void OnDraw(EventArgs args)
         {
             if (Player == null || Player.IsDead || Player.IsRecalling())
