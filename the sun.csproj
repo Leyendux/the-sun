@@ -69,8 +69,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Champions\Garen.cs" />
     <Compile Include="Champions\Orianna.cs" />
     <Compile Include="Champions\Samira.cs" />
+    <Compile Include="Champions\Talon.cs" />
     <Compile Include="Champions\Vladimir.cs" />
     <Compile Include="Core\Champion.cs" />
     <Compile Include="Program.cs" />
