@@ -12,7 +12,7 @@ namespace the_sun.Champions
     {
         protected override void SetupSpells()
         {
-            Q = new Spell(SpellSlot.Q, 1100f) { Delay = 0.25f, Speed = 2300, Width = 200, IsSkillShot = true, Collision = false, Type = SpellType.Line };
+            Q = new Spell(SpellSlot.Q, 1075f) { Delay = 0.25f, Speed = 1200, Width = 60, IsSkillShot = true, Collision = false, Type = SpellType.Line };
             W = new Spell(SpellSlot.W, 1600f) { Delay = 0.25f, Width = 375, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
             E = new Spell(SpellSlot.E, 550f) { Delay = 0f };
             R = new Spell(SpellSlot.R, 375f) { Delay = 0.5f };
@@ -109,7 +109,7 @@ namespace the_sun.Champions
                     PredictionOutput output = Q.GetPrediction(target);
 
                     if (output.Hitchance >= HitChance.High)
-                    {
+                    { 
                         Q.Cast(output.CastPosition);
                         return;
                     }
@@ -128,7 +128,7 @@ namespace the_sun.Champions
                     target = TargetSelector.SelectedTarget;
                 }
 
-                if (target != null && !target.IsDead)
+                if (target != null && !target.IsDead && target.InRange(E.Range))
                 {
                     E.Cast(target.Position);
                 }

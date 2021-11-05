@@ -12,10 +12,10 @@ namespace the_sun.Champions
     {
         protected override void SetupSpells()
         {
-            Q = new Spell(SpellSlot.Q, 950f) { Delay = 0.25f, Speed = 2600f, Width = 120f, Collision = true, IsSkillShot = true, Type = SpellType.Line };
+            Q = new Spell(SpellSlot.Q, 950f) { Delay = 0.25f, Speed = 500f, Width = 80f, Collision = true, IsSkillShot = true, Type = SpellType.Line };
             W = new Spell(SpellSlot.W, 325f) { Delay = 0.1f };
-            E = new Spell(SpellSlot.E, 600f) { Delay = 0f, Speed = 1600f, Width = 300f, IsSkillShot = false, Collision = false };
-            R = new Spell(SpellSlot.R, 600f) { Delay = 0f, IsSkillShot = false, Collision = false };
+            E = new Spell(SpellSlot.E, 600f) { Delay = 0f, Speed = 1600f, Width = 300f };
+            R = new Spell(SpellSlot.R, 600f) { Delay = 0f };
         }
         protected override void SetupEvents()
         {

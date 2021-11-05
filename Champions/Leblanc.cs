@@ -13,8 +13,8 @@ namespace the_sun.Champions
         protected override void SetupSpells()
         {
             Q = new Spell(SpellSlot.Q, 700f) { Delay = 0.25f, Speed = 2000 };
-            W = new Spell(SpellSlot.W, 600f) { Delay = 0f, Speed = 1450, Width = 240, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
-            E = new Spell(SpellSlot.E, 950f) { Delay = 0.25f, Speed = 1750, Width = 110, IsSkillShot = true, Collision = true, Type = SpellType.Line };
+            W = new Spell(SpellSlot.W, 600f) { Delay = 0f, Speed = 1450, Width = 220, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
+            E = new Spell(SpellSlot.E, 925f) { Delay = 0.25f, Speed = 1750, Width = 55, IsSkillShot = true, Collision = true, Type = SpellType.Line };
             R = new Spell(SpellSlot.R, 0f);
         }
         protected override void SetupEvents()
@@ -91,6 +91,42 @@ namespace the_sun.Champions
                         }
                     }
                 }
+                if (R.Name == "LeblancRQ")
+                {
+                    if (TargetSelector.SelectedTarget == null)
+                    {
+                        target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                        && i.DistanceToPlayer() <= Q.Range && !i.IsDead)
+                        .OrderBy(i => i.Health).FirstOrDefault();
+                    }
+                    else
+                    {
+                        target = TargetSelector.SelectedTarget;
+                    }
+
+                    if (target != null && !target.IsDead && target.InRange(Q.Range))
+                    {
+                        R.Cast(target);
+                    }
+                }
+            }
+            if (Q.IsReady())
+            {
+                if (TargetSelector.SelectedTarget == null)
+                {
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= Q.Range && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if (target != null && !target.IsDead && target.InRange(Q.Range))
+                {
+                    Q.Cast(target);
+                }
             }
             if (E.IsReady())
             {
@@ -138,24 +174,6 @@ namespace the_sun.Champions
                         W.Cast(output.CastPosition);
                         return;
                     }
-                }
-            }
-            if (Q.IsReady())
-            {
-                if (TargetSelector.SelectedTarget == null)
-                {
-                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= Q.Range && !i.IsDead)
-                    .OrderBy(i => i.Health).FirstOrDefault();
-                }
-                else
-                {
-                    target = TargetSelector.SelectedTarget;
-                }
-
-                if (target != null && !target.IsDead && target.InRange(Q.Range))
-                {
-                    Q.Cast(target);
                 }
             }
         }
