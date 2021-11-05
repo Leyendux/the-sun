@@ -8,18 +8,19 @@ using the_sun.Core;
 
 namespace the_sun.Champions
 {
-    public class Talon : Champion
+    public class Leblanc : Champion
     {
         protected override void SetupSpells()
         {
-            Q = new Spell(SpellSlot.Q, 575f) { Delay = 0.25f };
-            W = new Spell(SpellSlot.W, 900f) { Delay = 0.25f, IsSkillShot = true, Collision = false, Type = SpellType.Cone, Width = 22 };
-            E = new Spell(SpellSlot.E, 325f) { Delay = 0f };
-            R = new Spell(SpellSlot.R, 550f) { Delay = 0f };
+            Q = new Spell(SpellSlot.Q, 700f) { Delay = 0.25f, Speed = 2000 };
+            W = new Spell(SpellSlot.W, 600f) { Delay = 0f, Speed = 1450, Width = 240, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
+            E = new Spell(SpellSlot.E, 950f) { Delay = 0.25f, Speed = 1750, Width = 110, IsSkillShot = true, Collision = true, Type = SpellType.Line };
+            R = new Spell(SpellSlot.R, 0f);
         }
         protected override void SetupEvents()
         {
             GameEvent.OnGameTick += OnTick;
+            AIBaseClient.OnDoCast += OnDoCast;
             Drawing.OnDraw += OnDraw;
         }
         protected override void SetupMenus()
@@ -54,11 +55,9 @@ namespace the_sun.Champions
                 case OrbwalkerMode.Combo:
                     OnComboUpdate();
                     break;
-                case OrbwalkerMode.LaneClear:
-                    OnLaneClear();
-                    break;
             }
         }
+
         private void OnComboUpdate()
         {
             if (Player.IsDodgingMissiles)
@@ -68,10 +67,37 @@ namespace the_sun.Champions
             AIHeroClient target;
             if (R.IsReady())
             {
+                if(R.Name == "LeblancRE")
+                {
+                    if (TargetSelector.SelectedTarget == null)
+                    {
+                        target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                        && i.DistanceToPlayer() <= E.Range && !i.IsDead)
+                        .OrderBy(i => i.Health).FirstOrDefault();
+                    }
+                    else
+                    {
+                        target = TargetSelector.SelectedTarget;
+                    }
+
+                    if (target != null && !target.IsDead)
+                    {
+                        PredictionOutput output = E.GetPrediction(target);
+
+                        if (output.Hitchance >= HitChance.High)
+                        {
+                            R.Cast(output.CastPosition);
+                            return;
+                        }
+                    }
+                }
+            }
+            if (E.IsReady())
+            {
                 if (TargetSelector.SelectedTarget == null)
                 {
                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= R.Range && !i.IsDead)
+                    && i.DistanceToPlayer() <= E.Range && !i.IsDead)
                     .OrderBy(i => i.Health).FirstOrDefault();
                 }
                 else
@@ -81,9 +107,36 @@ namespace the_sun.Champions
 
                 if (target != null && !target.IsDead)
                 {
-                    if (target.Health <= (Q.GetDamage(target) + W.GetDamage(target) + R.GetDamage(target) + Player.GetAutoAttackDamage(target, true)) || target == TargetSelector.SelectedTarget)
+                    PredictionOutput output = E.GetPrediction(target);
+
+                    if (output.Hitchance >= HitChance.High)
                     {
-                        R.Cast();
+                        E.Cast(output.CastPosition);
+                        return;
+                    }
+                }
+            }
+            if (W.IsReady())
+            {
+                if (TargetSelector.SelectedTarget == null)
+                {
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= W.Range && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if (target != null && !target.IsDead)
+                {
+                    PredictionOutput output = W.GetPrediction(target);
+
+                    if (output.Hitchance >= HitChance.High)
+                    {
+                        W.Cast(output.CastPosition);
+                        return;
                     }
                 }
             }
@@ -99,78 +152,22 @@ namespace the_sun.Champions
                 {
                     target = TargetSelector.SelectedTarget;
                 }
-                if (target != null && !target.IsDead)
+
+                if (target != null && !target.IsDead && target.InRange(Q.Range))
                 {
                     Q.Cast(target);
                 }
             }
-            if(W.IsReady())
-            {
-                if (TargetSelector.SelectedTarget == null)
-                {
-                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= W.Range && !i.IsDead)
-                    .OrderBy(i => i.Health).FirstOrDefault();
-                }
-                else
-                {
-                    target = TargetSelector.SelectedTarget;
-                }
-                if (target != null && !target.IsDead)
-                {
-                    PredictionOutput output = W.GetPrediction(target);
-
-                    if(output.Hitchance >= HitChance.High)
-                    {
-                        W.Cast(output.CastPosition);
-                    }
-                }
-            }
         }
-        private void OnLaneClear()
+        private void OnDoCast(AIBaseClient sender, AIBaseClientProcessSpellCastEventArgs args)
         {
-            if(Player.IsDodgingMissiles)
+            if (sender == null || !sender.IsValid)
             {
                 return;
             }
-            AIMinionClient[] minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                       && i.DistanceToPlayer() <= W.Range && !i.IsDead).ToArray();
 
-            if (minions.Length >= 3)
-            {
-                if (minions.FirstOrDefault() != null || !minions.FirstOrDefault().IsDead)
-                {
-                    W.Cast(minions.FirstOrDefault().Position);
-                }
-            }
-
-            minions = GameObjects.EnemyMinions.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= W.Range && !i.IsDead).ToArray();
-
-            foreach (AIMinionClient m in minions)
-            {
-                if (m.Health <= W.GetDamage(m))
-                {
-                    W.Cast(m.Position);
-                }
-            }
-
-            AIMinionClient minion = GameObjects.Jungle.Where(i => i.IsValidTarget()
-                       && i.DistanceToPlayer() <= Q.Range && !i.IsDead).OrderBy(i => i.Health).FirstOrDefault();
-
-            if (minion != null && !minion.IsDead)
-            {
-                Q.Cast(minion);
-            }
-
-            minion = GameObjects.Jungle.Where(i => i.IsValidTarget()
-                       && i.DistanceToPlayer() <= W.Range && !i.IsDead).OrderBy(i => i.Health).FirstOrDefault();
-
-            if(minion != null && !minion.IsDead)
-            {
-                W.Cast(minion.Position);
-            }
         }
+
         private void OnDraw(EventArgs args)
         {
             if (Player == null || Player.IsDead || Player.IsRecalling())
