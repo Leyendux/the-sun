@@ -63,7 +63,20 @@ namespace the_sun.Champions
                 return;
             }
 
-            if(Player.HasBuff("SamiraW"))
+            AIHeroClient target;
+            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+               && i.DistanceToPlayer() <= E.Range && !i.IsDead)
+               .OrderBy(i => i.Health).FirstOrDefault();
+
+            if(target != null && !target.IsDead && target.InRange(E.Range))
+            {
+                if(target.Health <= E.GetDamage(target) + Player.GetAutoAttackDamage(target, true))
+                {
+                    E.Cast(target);
+                }
+            }
+
+            if (Player.HasBuff("SamiraW"))
             {
                 Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
             }

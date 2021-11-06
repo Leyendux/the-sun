@@ -8,20 +8,21 @@ using the_sun.Core;
 
 namespace the_sun.Champions
 {
-    public class Ekko : Champion
+    public class Katarina : Champion
     {
         protected override void SetupSpells()
         {
-            Q = new Spell(SpellSlot.Q, 1075f) { Delay = 0.25f, Speed = 1200, Width = 60, IsSkillShot = true, Collision = false, Type = SpellType.Line };
-            W = new Spell(SpellSlot.W, 1600f) { Delay = 0.25f, Width = 375, IsSkillShot = true, Collision = false, Type = SpellType.Circle };
-            E = new Spell(SpellSlot.E, 550f) { Delay = 0f };
-            R = new Spell(SpellSlot.R, 375f) { Delay = 0.5f };
+            Q = new Spell(SpellSlot.Q, 625f) { Delay = 0.25f };
+            W = new Spell(SpellSlot.W, 0f) { Delay = 0f };
+            E = new Spell(SpellSlot.E, 725f) { Delay = 0f };
+            R = new Spell(SpellSlot.R, 550f) { Delay = 0f };
         }
         protected override void SetupEvents()
         {
             GameEvent.OnGameTick += OnTick;
-            AIBaseClient.OnDoCast += OnDoCast;
             Drawing.OnDraw += OnDraw;
+            AIBaseClient.OnBuffAdd += OnBuffAdd;
+            AIBaseClient.OnBuffRemove += OnBuffRemove;
         }
         protected override void SetupMenus()
         {
@@ -38,7 +39,6 @@ namespace the_sun.Champions
             }
         }
 
-        AIMinionClient ekkoShadow;
         private void OnTick(EventArgs args)
         {
             if (Player == null || Player.IsDead || Player.IsRecalling())
@@ -51,9 +51,32 @@ namespace the_sun.Champions
                 return;
             }
 
-            if(R.IsReady())
+            AIHeroClient target;
+            target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                && i.DistanceToPlayer() <= 775 && !i.IsDead)
+                .OrderBy(i => i.Health).FirstOrDefault();
+
+            if (target != null && !target.IsDead && target.InRange(775))
             {
-                ekkoShadow = GameObjects.AllyMinions.Where(i => i.Name == "Ekko").FirstOrDefault();
+                if(target.Health <= E.GetDamage(target) + Player.GetAutoAttackDamage(target, true))
+                {
+                    AIMinionClient dagger = GameObjects.AllyMinions.Where(i => i.Name == "HiddenMinion" && i.Distance(target) <= 775).OrderBy(i => i.Distance(target)).FirstOrDefault();
+                    if (dagger != null && !dagger.IsDead)
+                    {
+                        if (target.Distance(dagger) <= 340)
+                        {
+                            E.Cast(dagger.Position);
+                        }
+                        else
+                        {
+                            E.Cast(target.Position);
+                        }
+                    }
+                    else
+                    {
+                        E.Cast(target.Position);
+                    }
+                }
             }
 
             switch (Orbwalker.ActiveMode)
@@ -63,19 +86,21 @@ namespace the_sun.Champions
                     break;
             }
         }
+
         private void OnComboUpdate()
         {
-            if(Player.IsDodgingMissiles)
+            if (Player.IsDodgingMissiles)
             {
                 return;
             }
+
             AIHeroClient target;
-            if(R.IsReady())
+            if (R.IsReady())
             {
                 if (TargetSelector.SelectedTarget == null)
                 {
                     target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.Distance(ekkoShadow) <= R.Range && !i.IsDead)
+                    && i.DistanceToPlayer() <= R.Range && !i.IsDead)
                     .OrderBy(i => i.Health).FirstOrDefault();
                 }
                 else
@@ -83,11 +108,54 @@ namespace the_sun.Champions
                     target = TargetSelector.SelectedTarget;
                 }
 
-                if(target != null && !target.IsDead)
+                if (target != null && !target.IsDead && target.InRange(R.Range))
                 {
-                    if(target.Health <= (Player.GetAutoAttackDamage(target, true) + R.GetDamage(target)) && target.Distance(ekkoShadow) <= R.Range || ekkoShadow.CountEnemyHeroesInRange(R.Range) >= 2)
+                    if(target.Health <= (Player.GetAutoAttackDamage(target, true) + R.GetDamage(target)))
                     {
                         R.Cast();
+                    }
+                }
+            }
+            if (E.IsReady())
+            {
+                if (TargetSelector.SelectedTarget == null)
+                {
+                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
+                    && i.DistanceToPlayer() <= 775 && !i.IsDead)
+                    .OrderBy(i => i.Health).FirstOrDefault();
+                }
+                else
+                {
+                    target = TargetSelector.SelectedTarget;
+                }
+
+                if (target != null && !target.IsDead && target.InRange(775))
+                {
+                    AIMinionClient dagger = GameObjects.AllyMinions.Where(i => i.Name == "HiddenMinion" && i.Distance(target) <= 775).OrderBy(i => i.Distance(target)).FirstOrDefault();
+                    if (dagger != null && !dagger.IsDead)
+                    {
+                        if(target.Distance(dagger) <= 340)
+                        {
+                            E.Cast(dagger.Position);
+                            if(W.IsReady())
+                            {
+                                W.Cast();
+                            }
+                        } else
+                        {
+                            E.Cast(target.Position);
+                            if (W.IsReady())
+                            {
+                                W.Cast();
+                            }
+                        }
+                    } else
+                    {
+                        E.Cast(target.Position);
+                        if (W.IsReady())
+                        {
+                            W.Cast();
+                        }
                     }
                 }
             }
@@ -104,75 +172,30 @@ namespace the_sun.Champions
                     target = TargetSelector.SelectedTarget;
                 }
 
-                if (target != null && !target.IsDead)
+                if (target != null && !target.IsDead && target.InRange(Q.Range))
                 {
-                    PredictionOutput output = Q.GetPrediction(target);
-
-                    if (output.Hitchance >= HitChance.High)
-                    { 
-                        Q.Cast(output.CastPosition);
-                        return;
-                    }
-                }
-            }
-            if (E.IsReady())
-            {
-                if (TargetSelector.SelectedTarget == null)
-                {
-                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= E.Range && !i.IsDead)
-                    .OrderBy(i => i.Health).FirstOrDefault();
-                }
-                else
-                {
-                    target = TargetSelector.SelectedTarget;
-                }
-
-                if (target != null && !target.IsDead && target.InRange(E.Range))
-                {
-                    E.Cast(target.Position);
-                }
-            }
-            if (W.IsReady())
-            {
-                if (TargetSelector.SelectedTarget == null)
-                {
-                    target = GameObjects.EnemyHeroes.Where(i => i.IsValidTarget()
-                    && i.DistanceToPlayer() <= W.Range && !i.IsDead)
-                    .OrderBy(i => i.Health).FirstOrDefault();
-                }
-                else
-                {
-                    target = TargetSelector.SelectedTarget;
-                }
-
-                if (target != null && !target.IsDead)
-                {
-                    PredictionOutput output = W.GetPrediction(target);
-
-                    if (output.Hitchance >= HitChance.VeryHigh)
-                    {
-                        W.Cast(output.CastPosition);
-                        return;
-                    }
+                    Q.Cast(target);
                 }
             }
         }
-        private void OnDoCast(AIBaseClient sender, AIBaseClientProcessSpellCastEventArgs args)
+
+        private void OnBuffAdd(AIBaseClient sender, AIBaseClientBuffAddEventArgs args)
         {
-            if (sender == null || !sender.IsValid)
+            if(sender.IsMe && args.Buff.Name == "katarinarsound")
             {
-                return;
-            }
-
-            if (sender.IsEnemy && R.IsReady())
-            {
-                if ((args.Target.IsMe || args.To.DistanceToPlayer() <= R.Range) && Player.HealthPercent <= 30 && !(sender is AIMinionClient))
-                {
-                    R.Cast();
-                }
+                Orbwalker.ResetAutoAttackTimer();
+                Orbwalker.SetPauseTime(2500);
             }
         }
+
+        private void OnBuffRemove(AIBaseClient sender, AIBaseClientBuffRemoveEventArgs args)
+        {
+            if (sender.IsMe && args.Buff.Name == "katarinarsound")
+            {
+                Orbwalker.ResetAutoAttackTimer();
+            }
+        }
+
 
         private void OnDraw(EventArgs args)
         {
@@ -184,6 +207,16 @@ namespace the_sun.Champions
             if (MenuGUI.IsChatOpen || MenuGUI.IsShopOpen)
             {
                 return;
+            }
+
+            AIMinionClient[] minion = GameObjects.AllyMinions.Where(i => i.Name == "HiddenMinion").ToArray();
+
+            foreach(AIMinionClient dagger in minion)
+            {
+                if(dagger != null && !dagger.IsDead)
+                {
+                    Render.Circle.DrawCircle(dagger.Position, 135f, Color.Blue);
+                }
             }
 
             if (DrawMenu["OnlyReady"].GetValue<MenuBool>().Enabled)
@@ -205,7 +238,7 @@ namespace the_sun.Champions
 
                 if (DrawMenu["R"].GetValue<MenuBool>().Enabled && R.IsReady())
                 {
-                    Render.Circle.DrawCircle(ekkoShadow.Position, R.Range, Color.Red);
+                    Render.Circle.DrawCircle(GameObjects.Player.Position, R.Range, Color.Red);
                 }
             }
             else
